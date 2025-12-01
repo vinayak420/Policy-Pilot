@@ -24,7 +24,7 @@ else:
 
 #------Extracting and splitting
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size = 1200, chunk_overlap = 300)
+text_splitter = RecursiveCharacterTextSplitter(chunk_size = 500, chunk_overlap = 50)
 chunks = text_splitter.split_documents(documents)
 print("done splitting...")
 
@@ -32,7 +32,7 @@ print(f"Number of chunks {len(chunks)}")
 
 #-------Adding to Vector DB
 
-ollama.pull("nomic-embed-text")
+ollama.pull("snowflake-arctic-embed")
 
 vector_db = Chroma.from_documents(
     documents=chunks,
@@ -46,5 +46,4 @@ print("done adding to vector db")
 vector_db.persist()
 print("Vector DB built & saved.")
 
-#---------Retrieval
- 
+
