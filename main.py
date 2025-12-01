@@ -6,6 +6,8 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.retrievers.multi_query import MultiQueryRetriever
 import streamlit as st
+from langchain_community.retrievers import BM25Retriever
+from langchain.retrievers import EnsembleRetriever
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import time
@@ -22,19 +24,22 @@ llm = ChatOllama(model='llama3.1', stream = False)
 
 
 
-QUERY_PROMPT = PromptTemplate(
-    input_variables=["question"],
-    template="""You are an AI language model assistant. Your task is to generate five
-    different versions of the given user question to retrieve relevant documents from
-    a vector database. By generating multiple perspectives on the user question, your
-    goal is to help the user overcome some of the limitations of the distance-based
-    similarity search. Provide these alternative questions separated by newlines.
-    Original question: {question}""",
-    )
+# QUERY_PROMPT = PromptTemplate(
+#     input_variables=["question"],
+#     template="""You are an AI language model assistant. Your task is to generate five
+#     different versions of the given user question to retrieve relevant documents from
+#     a vector database. By generating multiple perspectives on the user question, your
+#     goal is to help the user overcome some of the limitations of the distance-based
+#     similarity search. Provide these alternative questions separated by newlines.
+#     Original question: {question}""",
+#     )
 
-retriever = MultiQueryRetriever.from_llm(
-        vector_db.as_retriever(), llm, prompt=QUERY_PROMPT
-    )
+# retriever = MultiQueryRetriever.from_llm(
+#         vector_db.as_retriever(), llm, prompt=QUERY_PROMPT
+#     )
+
+
+retriever = vector_db.as_retriever(search_kwargs = {"k":25})
 
 template = """You are PolicyPilot, an insurance expert.
 
@@ -54,14 +59,17 @@ template = """You are PolicyPilot, an insurance expert.
 prompt = ChatPromptTemplate.from_template(template)
 
 chain = (
-        {"context": retriever, "question": RunnablePassthrough()}
+        {
+          "question": lambda x: x["question"],
+          "context": lambda x: retriever.invoke(x["question"])
+          }
         | prompt
         | llm
         | StrOutputParser()
     )
 
 
-#--------------UI------------
+# --------------UI------------
 st.set_page_config(page_title="PolicyPilot")
 st.title("PolicyPilot")
 st.write("Your Personal Insurance Advisor")
