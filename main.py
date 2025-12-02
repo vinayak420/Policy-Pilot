@@ -11,6 +11,11 @@ from langchain.retrievers import EnsembleRetriever
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import time
+import tempfile
+from langchain_community.vectorstores import FAISS
+
+if "uploaded_retriever" not in st.session_state:
+    st.session_state["uploaded_retriever"] = None
 
 embeddings = OllamaEmbeddings(model = "snowflake-arctic-embed")
 
@@ -25,6 +30,39 @@ vector_db = Chroma(
 llm = ChatOllama(model='llama3.1', stream = False)
 
 
+#---------document upload------------
+
+st.sidebar.title("Upload Policy Documents")
+
+uploaded_files = st.sidebar.file_uploader(
+
+    "Upload",
+    type=["pdf"],
+    accept_multiple_files=True
+)
+
+if uploaded_files:
+    st.sidebar.info("Processing")
+
+    docs = []
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size = 1000, chunk_overlap = 200)
+
+    for pdf in uploaded_files:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp:
+            temp.write(pdf.read())
+            temp_path = temp.name
+        loader = PyPDFLoader(temp_path)
+        docs.extend(loader.load())
+    
+    chunks = text_splitter.split_documents(docs)
+
+    #FAISS store
+    st.session_state["uploaded_retriever"] = FAISS.from_documents(
+        chunks,
+        embeddings
+    ).as_retriever(search_kwargs={"k":10})
+
+    st.success("Document uploaded!")
 
 # QUERY_PROMPT = PromptTemplate(
 #     input_variables=["question"],
@@ -39,6 +77,10 @@ llm = ChatOllama(model='llama3.1', stream = False)
 # retriever = MultiQueryRetriever.from_llm(
 #         vector_db.as_retriever(), llm, prompt=QUERY_PROMPT
 #     )
+
+
+
+
 
 
 retriever = vector_db.as_retriever(search_kwargs = {"k":25})
