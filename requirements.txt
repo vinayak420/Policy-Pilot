@@ -1,16 +1,28 @@
-ollama
-chromadb
-pdfplumber 
-langchain
-langchain-core
-langchain-ollama
-langchain-community
-langchain_text_splitters
-unstructured
-fastembed
-pikepdf
-sentence-transformers
-elevenlabs
-time
-tempfile
-faiss-cpu
+# --- Core ---
+langchain==0.2.14
+langchain-core==0.2.32
+langchain-community==0.2.11
+langchain-ollama==0.1.4
+langchain-text-splitters==0.2.2
+
+# --- Vector DBs ---
+chromadb==1.7.3
+faiss-cpu==1.7.4
+fastembed==0.7.3
+
+# --- Embeddings / ML ---
+sentence-transformers==2.7.0
+
+# --- PDF Processing ---
+pdfplumber==0.11.4
+pikepdf==9.2.0
+unstructured==0.15.9
+
+# --- LLM Tools ---
+ollama==0.1.14
+elevenlabs==1.7.0
+
+# --- Utilities ---
+tiktoken==0.7.0
+python-dotenv==1.0.1
+requests==2.32.3
